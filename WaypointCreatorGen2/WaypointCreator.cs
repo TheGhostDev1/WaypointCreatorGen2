@@ -13,6 +13,7 @@ namespace WaypointCreatorGen2
         Dictionary<UInt32, Dictionary<UInt64, List<WaypointInfo>>> WaypointDatabyCreatureEntry = new Dictionary<UInt32, Dictionary<UInt64, List<WaypointInfo>>>();
 
         DataGridViewRow[] CopiedDataGridRows;
+        private uint _selectedCreatureId = 0;
 
 
         public WaypointCreator()
@@ -144,7 +145,10 @@ namespace WaypointCreatorGen2
                                         int index = result[creatureId][lowGuid].Count - 1;
                                         Int64 timeDiff = wpInfo.TimeStamp - result[creatureId][lowGuid][index].TimeStamp;
                                         UInt32 oldMoveTime = result[creatureId][lowGuid][index].MoveTime;
-                                        result[creatureId][lowGuid][index].Delay = Convert.ToInt32(timeDiff - oldMoveTime);
+                                        int delay = Convert.ToInt32(timeDiff - oldMoveTime);
+                                        if (delay < 0)
+                                            delay = 0;
+                                        result[creatureId][lowGuid][index].Delay = delay;
                                     }
                                 }
 
@@ -209,6 +213,8 @@ namespace WaypointCreatorGen2
 
             if (!WaypointDatabyCreatureEntry.ContainsKey(creatureId))
                 return;
+
+            _selectedCreatureId = creatureId;
 
             if (WaypointDatabyCreatureEntry[creatureId].ContainsKey(lowGUID))
             {
@@ -383,11 +389,12 @@ namespace WaypointCreatorGen2
         {
             // Generates the SQL output.
             // waypoint_data
-            SQLOutputTextBox.AppendText("SET @CGUID := xxxxxx;\r\n");
-            SQLOutputTextBox.AppendText("SET @PATH := @CGUID * 10;\r\n");
+            SQLOutputTextBox.AppendText($"SET @ENTRY := {_selectedCreatureId};\r\n");
+            SQLOutputTextBox.AppendText("SET @PATHOFFSET := 0;\r\n");
+            SQLOutputTextBox.AppendText("SET @PATH := @ENTRY * 100 + @PATHOFFSET;\r\n");
             SQLOutputTextBox.AppendText("DELETE FROM `waypoint_data` WHERE `id`= @PATH;\r\n");
             SQLOutputTextBox.AppendText("INSERT INTO `waypoint_data` (`id`, `point`, `position_x`, `position_y`, `position_z`, `orientation`, `delay`) VALUES\r\n");
-            
+
             int rowCount = 0;
             DataGridViewRow firstRow = null;
             foreach (DataGridViewRow row in EditorGridView.Rows)
@@ -425,12 +432,12 @@ namespace WaypointCreatorGen2
 
             // creature
             if (firstRow != null)
-                SQLOutputTextBox.AppendText($"UPDATE `creature` SET `position_x`= {firstRow.Cells[1].Value}, `position_y`= {firstRow.Cells[2].Value}, `position_z`= {firstRow.Cells[3].Value}, `orientation`= {firstRow.Cells[4].Value}, `spawndist`= 0, `MovementType`= 2 WHERE `guid`= @CGUID;\r\n");
+                SQLOutputTextBox.AppendText($"UPDATE `creature` SET `position_x`= {firstRow.Cells[1].Value}, `position_y`= {firstRow.Cells[2].Value}, `position_z`= {firstRow.Cells[3].Value}, `orientation`= 0, `wander_distance`= 0, `MovementType`= 2 WHERE `guid`= @CGUID+;\r\n");
 
             // creature_addon
-            SQLOutputTextBox.AppendText("DELETE FROM `creature_addon` WHERE `guid`= @CGUID;\r\n");
-            SQLOutputTextBox.AppendText("INSERT INTO `creature_addon` (`guid`, `waypointPathId`, `bytes2`) VALUES\r\n");
-            SQLOutputTextBox.AppendText("(@CGUID, @PATH, 1);\r\n");
+            SQLOutputTextBox.AppendText("DELETE FROM `creature_addon` WHERE `guid`= @CGUID+;\r\n");
+            SQLOutputTextBox.AppendText("INSERT INTO `creature_addon` (`guid`, `path_id`, `SheathState`) VALUES\r\n");
+            SQLOutputTextBox.AppendText("(@CGUID+, @PATH, 1);\r\n");
             SQLOutputTextBox.AppendText("\r\n");
             SQLOutputTextBox.AppendText("\r\n");
 
