@@ -542,11 +542,14 @@ namespace WaypointCreatorGen2
 
                 ++rowCount;
                 var nodeId = rowCount - 1;
-                if (rowCount < EditorGridView.Rows.Count)
-                    SQLOutputTextBox.AppendText($"(@PATH, {nodeId}, {row.Cells[1].Value}, {row.Cells[2].Value}, {row.Cells[3].Value}, {row.Cells[4].Value}, {row.Cells[6].Value}),\r\n");
-                else
-                    SQLOutputTextBox.AppendText($"(@PATH, {nodeId}, {row.Cells[1].Value}, {row.Cells[2].Value}, {row.Cells[3].Value}, {row.Cells[4].Value}, {row.Cells[6].Value});\r\n");
+                SQLOutputTextBox.AppendText($"(@PATH, {nodeId}, {row.Cells[1].Value}, {row.Cells[2].Value}, {row.Cells[3].Value}, {row.Cells[4].Value}, {row.Cells[6].Value}),\r\n");
             }
+
+            // replace last comma with semicolon to end the statement
+            string output = SQLOutputTextBox.Text;
+            int lastCommaIdx = output.LastIndexOf(',');
+            output = output.Remove(lastCommaIdx, 1).Insert(lastCommaIdx, ";");
+            SQLOutputTextBox.Text = output;
 
             SQLOutputTextBox.AppendText("\r\n");
 
