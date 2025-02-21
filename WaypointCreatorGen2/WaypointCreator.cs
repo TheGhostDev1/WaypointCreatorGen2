@@ -97,7 +97,7 @@ namespace WaypointCreatorGen2
                         for (int i = 0; i < packetHeader.Length; ++i)
                         {
                             if (packetHeader[i].Contains("Time:"))
-                                wpInfo.TimeStamp = UInt32.Parse(TimeSpan.Parse(packetHeader[i + 2]).TotalMilliseconds.ToString());
+                                wpInfo.TimeStamp = DateTime.ParseExact($"{packetHeader[i + 1]} {packetHeader[i + 2]}", "MM/dd/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture);
 
                             if (packetHeader[i].Contains("Number:"))
                                 wpInfo.PacketNum = ulong.Parse(packetHeader[i + 1]);
@@ -190,7 +190,7 @@ namespace WaypointCreatorGen2
                                         if (result[creatureId][lowGuid].Count != 0)
                                         {
                                             int index = result[creatureId][lowGuid].Count - 1;
-                                            Int64 timeDiff = wpInfo.TimeStamp - result[creatureId][lowGuid][index].TimeStamp;
+                                            Int64 timeDiff = (Int64)(wpInfo.TimeStamp - result[creatureId][lowGuid][index].TimeStamp).TotalMilliseconds;
                                             UInt32 oldMoveTime = result[creatureId][lowGuid][index].MoveTime;
                                             int delay = 0;
                                             if (oldMoveTime < 3 * 60 * 1000) // 3min, arbitrary number as MoveTime in UpdateObject might have high values causing overflows

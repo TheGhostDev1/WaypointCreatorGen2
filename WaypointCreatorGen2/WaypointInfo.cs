@@ -10,7 +10,7 @@ namespace WaypointCreatorGen2
 {
     public class WaypointInfo
     {
-        public UInt32 TimeStamp = 0;
+        public DateTime TimeStamp;
         public WaypointPosition Position = new WaypointPosition();
         public UInt32 MoveTime = 0;
         public Int32 Delay = 0;
